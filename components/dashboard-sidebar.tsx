@@ -1,0 +1,109 @@
+"use client"
+
+import { Car, Droplets, GaugeCircle, Home, Settings, ShieldAlert, Truck } from "lucide-react"
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
+
+export default function DashboardSidebar() {
+  return (
+    <Sidebar>
+      <SidebarHeader className="pb-4">
+        <div className="flex items-center justify-center py-4">
+          <div className="flex items-center gap-2 text-xl font-bold">
+            <div className="h-8 w-8 rounded-full bg-primary"></div>
+            <span>FuelGuard</span>
+          </div>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive>
+                  <a href="#">
+                    <Home className="h-5 w-5" />
+                    <span>Dashboard</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="#">
+                    <Car className="h-5 w-5" />
+                    <span>Vehicle Tracking</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="#">
+                    <Droplets className="h-5 w-5" />
+                    <span>Fuel Statistics</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="#">
+                    <ShieldAlert className="h-5 w-5" />
+                    <span>Theft Alerts</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="#">
+                    <Truck className="h-5 w-5" />
+                    <span>Fleet Management</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="#">
+                    <Settings className="h-5 w-5" />
+                    <span>Settings</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>System Stats</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="space-y-2 p-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>System Uptime</span>
+                <span className="font-medium">99.8%</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Sensor Status</span>
+                <span className="flex items-center gap-1">
+                  <GaugeCircle className="h-3 w-3 text-green-500" />
+                  <span className="font-medium">Healthy</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Last Update</span>
+                <span className="font-medium">2 mins ago</span>
+              </div>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  )
+}

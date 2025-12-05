@@ -14,13 +14,15 @@ export default function Dashboard() {
     <SidebarProvider>
       <div className="min-h-screen flex flex-col">
         <DashboardHeader />
-        <div className="flex flex-1">
+        <div className="flex flex-1 overflow-hidden mt-16">
           <DashboardSidebar />
-          <main className="flex-1 overflow-x-hidden">
-            <DashboardContent selectedVehicle={selectedVehicle} setSelectedVehicle={setSelectedVehicle} />
+          <main className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
+              <DashboardContent selectedVehicle={selectedVehicle} setSelectedVehicle={setSelectedVehicle} />
+            </div>
+            <DashboardFooter />
           </main>
         </div>
-        <DashboardFooter />
       </div>
     </SidebarProvider>
   )

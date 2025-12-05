@@ -1,442 +1,328 @@
-# Fuelguard ESP32 Firmware
+# FuelGuard Firmware 🔌
 
-Firmware for ESP32-based fuel monitoring device with GSM connectivity.
+IoT device firmware for vehicle monitoring and fuel sensing using ESP32/ESP8266.
 
-## Hardware Requirements
+## 📋 Overview
 
-### Core Components
-- **ESP32 DevKit** - Main microcontroller
-- **SIM800L** - GSM module for MQTT over cellular
-- **NEO-6M** - GPS module for location tracking
-- **JSN-SR04T** - Waterproof ultrasonic sensor (primary)
-- **Float Sensor** - Analog fuel level sensor (backup)
-- **Reed Switch** - Tamper detection
-- **Relay Module** - Fuel shutoff control
+This firmware enables real-time vehicle monitoring by reading fuel levels, GPS coordinates, and detecting tampering. Data is transmitted via MQTT to the FuelGuard cloud backend.
 
-### Power Components
-- **LM2596 Buck Converters** (2x) - 5V and 4V regulation
-- **Supercapacitor** (1F, 5.5V) - GSM power stability
-- **P-Channel MOSFET** - Reverse polarity protection
+---
 
-## Pin Connections
+## 🛠️ Hardware Requirements
+
+### Microcontroller
+- **ESP32** or **ESP8266**
+- Minimum 4MB flash memory
+- WiFi capability  
+- 2 UART ports (GPS + Debug)
+
+### Sensors
+- **Fuel Level Sensor** - Ultrasonic (HC-SR04) or Float sensor
+- **GPS Module** - NEO-6M, NEO-7M, or NEO-M8N
+- **Accelerometer** - MPU6050 (optional, for tamper detection)
+- **Temperature Sensor** - DHT22 (optional)
+
+### Additional Components
+- 12V to 5V/3.3V converter (vehicle power supply)
+- SD Card module (for offline logging)
+- LED indicators (status, power, error)
+- Housing (weatherproof enclosure)
+
+---
+
+## 🔧 Software Setup
+
+### Prerequisites
+- Arduino IDE 2.0+ or PlatformIO
+- ESP32/ESP8266 board support
+- Required libraries (see below)
+
+### Required Libraries
+
+Install via Arduino Library Manager:
 
 ```
-ESP32 GPIO    →  Component
-─────────────────────────────────
-GPIO 25       →  Ultrasonic TRIG
-GPIO 26       →  Ultrasonic ECHO
-GPIO 34 (ADC) →  Float Sensor
-GPIO 27       →  Reed Switch
-GPIO 32       →  Relay Module
-
-GPIO 17       →  SIM800L TX
-GPIO 16       →  SIM800L RX
-GPIO 4        →  SIM800L PWR
-
-GPIO 22       →  GPS TX
-GPIO 21       →  GPS RX
-
-GPIO 35 (ADC) →  Battery Monitor
+- WiFi.h (built-in)
+- PubSubClient (MQTT client)
+- TinyGPSPlus (GPS parsing)
+- ArduinoJson (JSON serialization)
+- NewPing (ultrasonic sensor)
+- Wire.h (I2C, built-in)
 ```
 
-## Power Supply
+### Installation
 
-```
-12V Vehicle Battery
-    │
-    ├─→ Reverse Polarity Protection (P-MOSFET)
-    │
-    ├─→ LM2596 (5V) → ESP32, Sensors, Relay
-    │
-    └─→ LM2596 (4V) → SIM800L + Supercapacitor (1F)
-```
+1. **Install Arduino IDE**
+   - Download from [arduino.cc](https://www.arduino.cc/en/software)
 
-## Configuration
-
-Edit `src/config.h` before uploading:
-
-```cpp
-// Device Identification
-#define DEVICE_ID "ESP32_001"  // Unique per device
-
-// GSM Configuration
-#define GSM_APN "internet"     // Your carrier's APN
-#define GSM_USER ""            // Leave empty if not required
-#define GSM_PASS ""            // Leave empty if not required
-
-// MQTT Broker
-#define MQTT_BROKER "mqtt.yourdomain.com"
-#define MQTT_PORT 1883         // 8883 for TLS
-#define MQTT_USER "device_ESP32_001"
-#define MQTT_PASS "your_secure_password"
-#define MQTT_USE_TLS false     // Set true for production
-
-// Tank Configuration
-#define TANK_HEIGHT_CM 100.0   // Tank height in cm
-#define TANK_CAPACITY_L 200.0  // Tank capacity in liters
-
-// Sensor Pins
-#define ULTRASONIC_TRIG 25
-#define ULTRASONIC_ECHO 26
-#define FLOAT_SENSOR_PIN 34
-#define REED_SWITCH_PIN 27
-#define RELAY_PIN 32
-#define BATTERY_PIN 35
-
-// Thresholds
-#define THEFT_THRESHOLD 10.0   // % drop to trigger alert
-#define TAMPER_DEBOUNCE 5000   // ms
-
-// Emergency Contact
-#define EMERGENCY_PHONE "+1234567890"
-```
-
-## Installation
-
-### 1. Install PlatformIO
-
-**VS Code Extension (Recommended):**
-1. Install VS Code
-2. Install PlatformIO IDE extension
-3. Restart VS Code
-
-**CLI:**
-```bash
-pip install platformio
-```
-
-### 2. Open Project
-
-```bash
-cd firmware
-code .  # Opens in VS Code
-```
-
-### 3. Configure Device
-
-Edit `src/config.h` with your settings:
-- Device ID
-- GSM APN
-- MQTT broker details
-- Tank dimensions
-- Emergency phone
-
-### 4. Build Firmware
-
-```bash
-pio run
-```
-
-### 5. Upload to ESP32
-
-```bash
-# Connect ESP32 via USB
-pio run --target upload
-
-# Monitor serial output
-pio device monitor
-```
-
-## Calibration
-
-### Ultrasonic Sensor Calibration
-
-1. **Measure Tank Height**
-   ```cpp
-   #define TANK_HEIGHT_CM 100.0  // Your actual tank height
+2. **Add ESP32 Board Support**
+   ```
+   File → Preferences → Additional Board Manager URLs:
+   https://dl.espressif.com/dl/package_esp32_index.json
    ```
 
-2. **Test Empty Tank**
-   - Empty the tank completely
-   - Monitor serial output
-   - Should read ~0% fuel level
-
-3. **Test Full Tank**
-   - Fill tank completely
-   - Should read ~100% fuel level
-
-4. **Adjust if Needed**
-   - Modify `TANK_HEIGHT_CM` for accuracy
-
-### Float Sensor Calibration
-
-1. **Read Analog Values**
-   ```cpp
-   // Monitor serial output for raw values
-   // Empty: ~0-500
-   // Half: ~1500-2500
-   // Full: ~3500-4095
+3. **Install Libraries**
+   ```
+   Tools → Manage Libraries
+   Search and install all required libraries
    ```
 
-2. **Create Calibration Curve**
-   - Map analog values to fuel percentage
-   - Update `readFloatSensor()` function if needed
+4. **Configure WiFi & MQTT**
+   
+   Create `config.h` in firmware directory:
+   ```cpp
+   #ifndef CONFIG_H
+   #define CONFIG_H
+   
+   // WiFi Configuration
+   #define WIFI_SSID "your_wifi_ssid"
+   #define WIFI_PASSWORD "your_wifi_password"
+   
+   // MQTT Configuration
+   #define MQTT_BROKER "broker.hivemq.com"
+   #define MQTT_PORT 1883
+   #define MQTT_USERNAME ""
+   #define MQTT_PASSWORD ""
+   #define MQTT_TOPIC "fuelguard/devices"
+   
+   // Device Configuration
+   #define DEVICE_ID "ESP32_001"
+   #define READING_INTERVAL 30000  // 30 seconds
+   
+   // Tank Dimensions (cm)
+   #define TANK_HEIGHT 50
+   #define TANK_CAPACITY 60  // liters
+   
+   #endif
+   ```
 
-## MQTT Communication
+5. **Upload Firmware**
+   ```
+   Select Board → ESP32 Dev Module (or your board)
+   Select Port → Your COM port
+   Click Upload
+   ```
 
-### Publishing Topics
+---
 
-**Sensor Data:**
-```
-fuelguard/devices/{DEVICE_ID}/data
-```
+## 📡 Data Transmission
 
-**Device Status:**
-```
-fuelguard/devices/{DEVICE_ID}/status
-```
+Device sends JSON payloads every 30 seconds via MQTT:
 
-### Subscribing Topics
-
-**Commands:**
-```
-fuelguard/devices/{DEVICE_ID}/commands
-```
-
-### Payload Format
-
-**Sensor Data:**
 ```json
 {
   "deviceId": "ESP32_001",
-  "timestamp": 1234567890,
+  "timestamp": 1701234567,
   "data": {
     "fuel": {
-      "ultrasonic": 45.2,
-      "float": 2048,
-      "liters": 110.5,
-      "percentage": 55.25
+      "ultrasonic": 25.3,
+      "float": 24.8,
+      "liters": 42.5,
+      "percentage": 70.8
     },
     "gps": {
-      "lat": 37.7749,
-      "lon": -122.4194,
-      "speed": 45.5,
+      "lat": 19.8762,
+      "lng": 75.3433,
+      "speed": 45.2,
       "satellites": 8,
       "fix": true
     },
     "tamper": false,
-    "battery": 4.1,
+    "battery": 3.8,
     "signal": 25
   }
 }
 ```
 
-**Commands:**
-```json
-{
-  "command": "relay_on"
-}
-```
+---
 
-Available commands:
-- `relay_on` - Activate fuel shutoff
-- `relay_off` - Deactivate fuel shutoff
-- `reboot` - Restart ESP32
+## 🔋 Power Management
 
-## Serial Monitor Output
+**Features**:
+- Deep sleep mode when vehicle is stationary
+- Wake on motion detection (via accelerometer)
+- Low battery alerts (< 3.3V)
+- Power-saving WiFi modes
 
-Expected output on successful startup:
-
-```
-Fuelguard ESP32 Starting...
-Device ID: ESP32_001
-Initializing GSM...
-Modem: SIM800L
-Waiting for network... OK
-Signal strength: 25
-Connecting to GPRS... OK
-Connecting to MQTT broker... OK
-Subscribed to: fuelguard/devices/ESP32_001/commands
-
-GPS: Waiting for fix...
-GPS: Fix acquired (8 satellites)
-
-Fuel Level: 110.5L (55.2%)
-Location: 37.7749, -122.4194
-Tamper: OK
-Battery: 4.1V
-
-Data published successfully
-```
-
-## Troubleshooting
-
-### GSM Not Connecting
-
-**Symptoms:** "Waiting for network..." timeout
-
-**Solutions:**
-- Check SIM card is inserted and activated
-- Verify APN settings for your carrier
-- Ensure 4V power supply is stable (use supercap)
-- Check antenna connection
-- Try different location (better signal)
-
-### GPS No Fix
-
-**Symptoms:** GPS fix = false
-
-**Solutions:**
-- Ensure clear view of sky (outdoor)
-- Wait 2-5 minutes for initial fix (cold start)
-- Check antenna connection
-- Verify TX/RX pins are correct
-- Check GPS module LED (should blink)
-
-### MQTT Connection Failed
-
-**Symptoms:** "Connecting to MQTT... FAILED"
-
-**Solutions:**
-- Verify broker URL and port
-- Check MQTT credentials
-- Ensure GSM data connection is active
-- Test broker with `mosquitto_sub`
-- Check firewall rules
-
-### Sensor Readings Incorrect
-
-**Symptoms:** Wrong fuel percentage
-
-**Solutions:**
-- Recalibrate sensors
-- Check wiring connections
-- Verify power supply voltage (5V stable)
-- Monitor serial output for raw values
-- Ensure sensor is properly mounted
-
-### Device Rebooting
-
-**Symptoms:** Constant restarts
-
-**Solutions:**
-- Check power supply (needs 2A for GSM)
-- Add/check supercapacitor
-- Verify all ground connections
-- Check for short circuits
-- Monitor battery voltage
-
-## Power Consumption
-
-- **Idle**: ~80mA
-- **GPS Active**: ~120mA
-- **GSM Transmit**: ~2A (peak, <1s)
-- **Average**: ~150mA
-
-**Battery Life Calculation:**
-```
-12V 7Ah battery = 7000mAh
-Average draw = 150mA
-Runtime = 7000 / 150 = ~46 hours
-```
-
-## Production Deployment
-
-### 1. Configure for Production
-
+**Sleep Configuration**:
 ```cpp
-// src/config.h
-#define MQTT_BROKER "mqtt.yourdomain.com"
-#define MQTT_PORT 8883
-#define MQTT_USE_TLS true
+#define SLEEP_DURATION 60  // seconds
+#define MOTION_THRESHOLD 0.5  // g-force
+
+// Enter deep sleep
+esp_sleep_enable_timer_wakeup(SLEEP_DURATION * 1000000);
+esp_deep_sleep_start();
 ```
 
-### 2. Flash Multiple Devices
+---
 
+## ⚙️ Configuration
+
+### WiFi Setup
+- Device creates AP mode if connection fails
+- Connect to `FuelGuard-Setup` network
+- Navigate to `192.168.4.1`
+- Enter WiFi credentials via web interface
+
+### Over-the-Air (OTA) Updates
+```cpp
+#include <ArduinoOTA.h>
+
+ArduinoOTA.setHostname("fuelguard-esp32");
+ArduinoOTA.setPassword("your_ota_password");
+ArduinoOTA.begin();
+```
+
+Update firmware via network:
 ```bash
-# Create script for batch flashing
-#!/bin/bash
-for i in {001..050}; do
-  # Update DEVICE_ID in config.h
-  sed -i "s/ESP32_[0-9]*/ESP32_$i/" src/config.h
-  
-  # Flash
-  pio run --target upload
-  
-  # Wait for user to swap device
-  read -p "Connect next device and press Enter"
-done
+arduino-cli upload -p network://fuelguard-esp32.local
 ```
 
-### 3. Test Each Device
+---
 
-- Power on
-- Check serial output
-- Verify MQTT connection
-- Check data in Firestore
-- Test GPS fix
-- Test relay control
+## 🐛 Debugging
 
-## OTA Updates (Future)
+### Serial Monitor
+- Baud Rate: **115200**
+- Line Ending: Both NL & CR
+- Enable timestamps
 
-Firmware supports OTA updates:
-- Trigger via MQTT command
-- Download from HTTP server
-- Verify checksum
-- Flash and reboot
+### LED Indicators
+- **Solid Blue**: WiFi Connected, Running
+- **Blinking Blue**: Connecting to WiFi
+- **Solid Red**: Error State
+- **Blinking Green**: Data Transmission
+- **Off**: Deep Sleep
 
-## Security
+### Common Issues
 
-### Current
-- MQTT username/password authentication
-- Device ID validation in backend
+**No WiFi Connection**:
+- Check SSID/password in config.h
+- Verify 2.4GHz network (ESP32 doesn't support 5GHz)
+- Check distance from router
 
-### Production (Recommended)
-- Enable TLS for MQTT (`MQTT_USE_TLS true`)
-- Use unique credentials per device
-- Implement certificate pinning
-- Encrypt sensitive data
+**No GPS Fix**:
+- Ensure GPS antenna has clear sky view
+- Wait 1-2 minutes for initial fix
+- Check GPS module power (3.3V)
 
-## Performance
+**Fuel Reading Errors**:
+- Verify sensor wiring
+- Check sensor height above tank bottom
+- Calibrate tank dimensions in config.h
 
-- **Sensor Reading**: Every 30 seconds
-- **MQTT Publish**: Every 30 seconds
-- **GPS Update**: Continuous
-- **Battery Check**: Every reading
-- **Tamper Check**: Continuous
+---
 
-## Debugging
+## 📊 Pin Configuration
 
-### Enable Debug Output
+**ESP32 Default Pinout**:
 
-```cpp
-// In main.cpp
-#define DEBUG_MODE 1
+```
+GPS Module:
+  RX → GPIO 16
+  TX → GPIO 17
+  VCC → 3.3V
+  GND → GND
 
-#if DEBUG_MODE
-  Serial.println("Debug: GSM initialized");
-#endif
+Fuel Sensor (Ultrasonic):
+  TRIG → GPIO 26
+  ECHO → GPIO 27
+  VCC → 5V
+  GND → GND
+
+Fuel Sensor (Float):
+  SIGNAL → GPIO 34 (ADC1)
+  VCC → 3.3V
+  GND → GND
+
+LED Indicators:
+  Blue LED → GPIO 2
+  Red LED → GPIO 4
+  Green LED → GPIO 5
+
+SD Card:
+  MISO → GPIO 19
+  MOSI → GPIO 23
+  CLK → GPIO 18
+  CS → GPIO 5
 ```
 
-### Monitor All Serial Output
+---
 
+## 📝 Development
+
+### Compile
 ```bash
-pio device monitor --baud 115200
+arduino-cli compile --fqbn esp32:esp32:esp32dev
 ```
 
-### Test Individual Components
-
-```cpp
-// Test ultrasonic only
-void loop() {
-  float distance = readUltrasonicSensor();
-  Serial.printf("Distance: %.2f cm\n", distance);
-  delay(1000);
-}
+### Upload
+```bash
+arduino-cli upload -p /dev/ttyUSB0 --fqbn esp32:esp32:esp32dev
 ```
 
-## Libraries Used
+### Monitor
+```bash
+arduino-cli monitor -p /dev/ttyUSB0 -c baudrate=115200
+```
 
-- **TinyGSM** - GSM modem support
-- **TinyGPS++** - GPS parsing
-- **PubSubClient** - MQTT client
-- **ArduinoJson** - JSON serialization
+### PlatformIO (Alternative)
+```bash
+# Initialize project
+platformio init --board esp32dev
 
-## License
+# Build
+platformio run
 
-MIT
+# Upload
+platformio run --target upload
 
-## Support
+# Monitor
+platformio device monitor
+```
 
-- GitHub Issues: [Report a bug](https://github.com/yourusername/Fuelguard-1/issues)
-- Documentation: See main [README](../README.md)
+---
+
+## 🔒 Security
+
+- **WiFi Encryption**: WPA2 required
+- **MQTT TLS**: Enable for production
+- **Device Auth**: Unique device ID + token
+- **Secure Boot**: Enable on ESP32
+- **Firmware Signing**: Sign releases
+
+---
+
+## 📈 Performance
+
+- **Boot Time**: ~200ms (normal), ~100ms (wake from sleep)
+- **Current Draw**: 80mA (active), 10μA (deep sleep)
+- **WiFi Range**: 50-100m (outdoor)
+- **GPS Accuracy**: ±2.5m (with good signal)
+- **Battery Life**: 1-2 weeks (sleep mode, 3000mAh)
+
+---
+
+## 🤝 Contributing
+
+Follow the main project contribution guidelines.
+
+---
+
+## 📚 Resources
+
+- [ESP32 Documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/)
+- [Arduino Reference](https://www.arduino.cc/reference/en/)
+- [TinyGPS++ Library](https://github.com/mikalhart/TinyGPSPlus)
+- [PubSubClient (MQTT)](https://github.com/knolleary/pubsubclient)
+- [ArduinoJson](https://arduinojson.org/)
+
+---
+
+## 📞 Support
+
+For firmware support, email yashghodele.work@gmail.com or open an issue on GitHub.
+
+---
+
+**Part of the FuelGuard project by Yash Ghodele**

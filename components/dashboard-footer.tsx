@@ -6,15 +6,15 @@ export default function DashboardFooter() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="relative z-40 border-t bg-gradient-to-r from-slate-900/50 via-slate-800/50 to-slate-900/50 backdrop-blur-lg">
+    <footer className="relative z-40 border-t bg-gradient-to-r from-slate-50 via-blue-50/30 to-slate-50 dark:from-slate-900/50 dark:via-slate-800/50 dark:to-slate-900/50 backdrop-blur-lg">
       <div className="w-full px-4 md:px-6 py-8">
         <div className="grid gap-8 md:grid-cols-4">
           {/* Left: Branding */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 shadow-lg shadow-purple-500/50"></div>
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 shadow-lg dark:shadow-purple-500/50"></div>
               <div>
-                <p className="font-bold text-lg bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">FuelGuard</p>
+                <p className="font-bold text-lg bg-gradient-to-r from-blue-500 to-pink-500 bg-clip-text text-transparent">FuelGuard</p>
                 <p className="text-xs text-muted-foreground">Vehicle Monitoring</p>
               </div>
             </div>
@@ -97,7 +97,7 @@ export default function DashboardFooter() {
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-white/10">
+        <div className="mt-8 pt-6 border-t border-border">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Credits */}
             <div className="text-center md:text-left">
@@ -107,7 +107,7 @@ export default function DashboardFooter() {
                   href="https://yash-ghodele.netlify.app/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent hover:from-purple-300 hover:to-cyan-300 transition-all"
+                  className="font-semibold bg-gradient-to-r from-blue-500 to-pink-500 bg-clip-text text-transparent hover:from-blue-400 hover:to-pink-400 transition-all"
                 >
                   Yash Ghodele
                 </a>
@@ -123,7 +123,7 @@ export default function DashboardFooter() {
                 href="https://github.com/yash-ghodele"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/50"
+                className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
                 aria-label="GitHub"
               >
                 <Github className="h-5 w-5" />
@@ -132,14 +132,14 @@ export default function DashboardFooter() {
                 href="https://linkedin.com/in/yash-ghodele"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/50"
+                className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="h-5 w-5" />
               </a>
               <a
                 href="mailto:yashghodele.work@gmail.com"
-                className="text-muted-foreground hover:text-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/50"
+                className="text-muted-foreground hover:text-primary transition-all hover:scale-110"
                 aria-label="Email"
               >
                 <Mail className="h-5 w-5" />

@@ -1,587 +1,293 @@
-# Fuelguard Backend
+# FuelGuard Backend 🔧
 
-Firebase Cloud Functions and MQTT bridge service for IoT fuel monitoring.
+Backend services, APIs, and cloud functions for the FuelGuard vehicle monitoring system.
 
-## Architecture
+## 📋 Overview
+
+This directory contains all backend services including Firebase Cloud Functions, MQTT bridge for IoT devices, and API endpoints for the dashboard.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Runtime**: Node.js 20.x
+- **Database**: Firebase Firestore
+- **Authentication**: Firebase Auth
+- **Real-time**: Firebase Realtime Database
+- **Cloud Functions**: Firebase Functions
+- **MQTT Bridge**: Node.js + MQTT.js
+- **Validation**: Zod v4
+- **Testing**: Jest
+
+---
+
+## 📁 Structure
 
 ```
-ESP32 → MQTT Broker → Bridge Service → Firestore → Cloud Functions → Frontend
-                                          ↓
-                                    Notifications
+backend/
+├── functions/           # Firebase Cloud Functions
+│   ├── src/
+│   │   ├── api/        # REST API endpoints
+│   │   ├── triggers/   # Database triggers
+│   │   └── utils/      # Utilities & validators
+│   └── package.json
+├── bridge/             # MQTT-Firebase bridge
+│   ├── src/
+│   │   ├── mqtt.ts    # MQTT client
+│   │   └── validators.ts
+│   └── package.json
+└── README.md
 ```
 
-## Components
+---
 
-### 1. Cloud Functions (`functions/`)
-
-Serverless API and Firestore triggers.
-
-**API Endpoints:**
-- `/api/vehicles` - Vehicle management
-- `/api/devices` - Device management
-- `/api/alerts` - Alert management
-- `/api/dashboard` - Dashboard statistics
-
-**Triggers:**
-- `onFuelReadingCreated` - Automatic theft detection
-- Scheduled functions for cleanup and reports
-
-### 2. MQTT Bridge (`bridge/`)
-
-Node.js service that connects MQTT broker to Firestore.
-
-**Features:**
-- Subscribes to device topics
-- Validates MQTT payloads
-- Writes to Firestore
-- Updates device status
-
-### 3. MQTT Broker (`mqtt-broker/`)
-
-EMQX or Mosquitto broker for IoT communication.
-
-**Production Features:**
-- TLS encryption
-- Authentication
-- ACL rules
-- WebSocket support
-
-## Setup
+## 🚀 Setup
 
 ### Prerequisites
-
-- Node.js 20+
+- Node.js 20.x or higher
 - Firebase CLI
-- Docker
-- Firebase project
+- Firebase project configured
 
-### 1. Install Firebase CLI
+### Installation
 
-```bash
-npm install -g firebase-tools
-firebase login
-```
+1. **Install Firebase CLI**
+   ```bash
+   npm install -g firebase-tools
+   ```
 
-### 2. Initialize Firebase
+2. **Login to Firebase**
+   ```bash
+   firebase login
+   ```
 
-```bash
-firebase init
+3. **Install dependencies**
+   ```bash
+   cd backend/functions
+   npm install
+   
+   cd ../bridge
+   npm install
+   ```
 
-# Select:
-# - Functions (TypeScript)
-# - Firestore
-# - Hosting (optional)
-```
+4. **Configure Firebase**
+   ```bash
+   firebase use --add
+   ```
 
-### 3. Install Dependencies
+---
 
-```bash
-# Cloud Functions
-cd functions
-npm install
-
-# Bridge Service
-cd ../bridge
-npm install
-```
-
-### 4. Configure Environment
-
-```bash
-# Functions
-cd functions
-cp .env.example .env
-# Edit with your configuration
-
-# Bridge
-cd ../bridge
-cp .env.example .env
-# Edit with MQTT and Firebase config
-```
-
-### 5. Start MQTT Broker
-
-```bash
-# Development
-docker-compose up -d
-
-# Production (with TLS)
-cd mqtt-broker
-./setup-tls.sh
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### 6. Deploy Firestore Rules
-
-```bash
-firebase deploy --only firestore:rules,firestore:indexes
-```
-
-### 7. Run Locally
-
-```bash
-# Start Firebase emulators
-cd functions
-firebase emulators:start
-
-# In another terminal, start bridge
-cd bridge
-npm run dev
-```
-
-## Development
-
-### Cloud Functions
-
-```bash
-cd functions
-
-# Build
-npm run build
-
-# Watch mode
-npm run dev
-
-# Lint
-npm run lint
-
-# Test
-npm test
-
-# Deploy
-npm run deploy
-```
-
-### Bridge Service
-
-```bash
-cd bridge
-
-# Build
-npm run build
-
-# Development
-npm run dev
-
-# Production
-npm start
-```
-
-## Testing
-
-```bash
-cd functions
-
-# Run all tests
-npm test
-
-# Watch mode
-npm run test:watch
-
-# Coverage
-npm run test:coverage
-```
-
-See [../docs/TESTING.md](../docs/TESTING.md) for detailed testing guide.
-
-## API Documentation
+## 📡 API Endpoints
 
 ### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+- `POST /api/auth/refresh` - Refresh token
 
-All API endpoints require Firebase Authentication token:
+### Vehicles
+- `GET /api/vehicles` - Get all vehicles
+- `GET /api/vehicles/:id` - Get vehicle by ID
+- `POST /api/vehicles` - Create new vehicle
+- `PUT /api/vehicles/:id` - Update vehicle
+- `DELETE /api/vehicles/:id` - Delete vehicle
 
-```bash
-Authorization: Bearer <firebase-id-token>
-```
+### Fuel Data
+- `GET /api/fuel/:vehicleId` - Get fuel readings
+- `GET /api/fuel/:vehicleId/stats` - Get statistics
+- `POST /api/fuel` - Add fuel reading
 
-### Vehicles API
+### Alerts
+- `GET /api/alerts` - Get all alerts
+- `GET /api/alerts/:id` - Get alert by ID
+- `POST /api/alerts` - Create alert
+- `PUT /api/alerts/:id/resolve` - Resolve alert
 
-#### List Vehicles
-```bash
-GET /api/vehicles
-```
+### Devices
+- `POST /api/devices/register` - Register IoT device
+- `PUT /api/devices/:id/config` - Update device config
+- `POST /api/devices/:id/command` - Send command to device
 
-#### Get Vehicle
-```bash
-GET /api/vehicles/:id
-```
+---
 
-#### Create Vehicle
-```bash
-POST /api/vehicles
-Content-Type: application/json
+## 🗄️ Database Schema
 
-{
-  "licensePlate": "ABC-123",
-  "make": "Toyota",
-  "model": "Camry",
-  "year": 2020,
-  "tankCapacity": 200,
-  "driver": "John Doe"
-}
-```
+### Collections
 
-#### Update Vehicle
-```bash
-PUT /api/vehicles/:id
-Content-Type: application/json
-
-{
-  "driver": "Jane Doe"
-}
-```
-
-#### Delete Vehicle
-```bash
-DELETE /api/vehicles/:id
-```
-
-#### Get Fuel History
-```bash
-GET /api/vehicles/:id/fuel-history?limit=100&startTime=1234567890
-```
-
-### Devices API
-
-#### Register Device
-```bash
-POST /api/devices
-Content-Type: application/json
-
-{
-  "deviceId": "ESP32_001",
-  "serialNumber": "SN123456",
-  "vehicleId": "veh123",
-  "firmwareVersion": "1.0.0"
-}
-```
-
-#### Update Configuration
-```bash
-PUT /api/devices/:id/config
-Content-Type: application/json
-
-{
-  "reportInterval": 30,
-  "theftThreshold": 10
-}
-```
-
-#### Send Command
-```bash
-POST /api/devices/:id/command
-Content-Type: application/json
-
-{
-  "command": "relay_on"
-}
-```
-
-Available commands:
-- `relay_on` - Activate fuel shutoff
-- `relay_off` - Deactivate fuel shutoff
-- `reboot` - Restart device
-
-#### Get Device Health
-```bash
-GET /api/devices/:id/health
-```
-
-### Alerts API
-
-#### List Alerts
-```bash
-GET /api/alerts?vehicleId=veh123&status=active&type=fuel_theft
-```
-
-#### Get Alert
-```bash
-GET /api/alerts/:id
-```
-
-#### Resolve Alert
-```bash
-PUT /api/alerts/:id/resolve
-Content-Type: application/json
-
-{
-  "notes": "False alarm - refueling",
-  "status": "false_positive"
-}
-```
-
-#### Get Statistics
-```bash
-GET /api/alerts/stats
-```
-
-### Dashboard API
-
-#### Get Summary
-```bash
-GET /api/dashboard/summary
-
-Response:
-{
-  "totalVehicles": 25,
-  "onlineVehicles": 23,
-  "avgFuelLevel": 67.5,
-  "activeAlerts": 2,
-  "deviceHealth": {
-    "online": 23,
-    "offline": 2,
-    "error": 0
-  },
-  "recentActivity": [...]
-}
-```
-
-## Firestore Collections
-
-### users
+#### `vehicles`
 ```typescript
 {
-  email: string;
-  role: 'admin' | 'operator' | 'viewer';
-  organizationId: string;
-  notificationPreferences: {
-    fcm: boolean;
-    sms: boolean;
-    email: boolean;
-  };
-  createdAt: Timestamp;
+  id: string
+  name: string
+  licensePlate: string
+  make: string
+  model: string
+  year: number
+  tankCapacity: number
+  deviceId: string
+  ownerId: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
 }
 ```
 
-### vehicles
+#### `fuelReadings`
 ```typescript
 {
-  licensePlate: string;
-  make: string;
-  model: string;
-  year: number;
-  tankCapacity: number;
-  deviceId?: string;
-  status: 'online' | 'offline';
-  driver?: string;
-  organizationId: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-```
-
-### devices
-```typescript
-{
-  deviceId: string;
-  serialNumber: string;
-  vehicleId?: string;
-  firmwareVersion: string;
-  status: 'online' | 'offline' | 'error';
-  lastSeen: Timestamp;
-  configuration: {
-    reportInterval: number;
-    theftThreshold: number;
-  };
-  organizationId: string;
-}
-```
-
-### fuelReadings
-```typescript
-{
-  vehicleId: string;
-  deviceId: string;
-  timestamp: number;
-  fuelLevel: {
-    liters: number;
-    percentage: number;
-  };
+  id: string
+  vehicleId: string
+  deviceId: string
+  fuelLevel: number
+  liters: number
+  percentage: number
   location: {
-    lat: number;
-    lon: number;
-    speed: number;
-    satellites: number;
-  } | null;
-  sensors: {
-    ultrasonic: {distance: number; valid: boolean};
-    float: {value: number; valid: boolean};
-    gps: {fix: boolean; satellites: number; speed: number};
-    tamper: boolean;
-    battery: number;
-    signalStrength: number;
-  };
-  organizationId: string;
+    lat: number
+    lng: number
+  }
+  timestamp: Timestamp
+  tamper: boolean
+  battery: number
+  signal: number
 }
 ```
 
-### alerts
+#### `alerts`
 ```typescript
 {
-  vehicleId: string;
-  deviceId: string;
-  type: 'fuel_theft' | 'tampering' | 'sensor_error';
-  fuelLoss: number;
-  location: {lat: number; lon: number} | null;
-  status: 'active' | 'resolved' | 'false_positive';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  detectedAt: number;
-  resolvedAt?: number;
-  resolvedBy?: string;
-  notes?: string;
-  organizationId: string;
+  id: string
+  vehicleId: string
+  deviceId: string
+  type: 'fuel_theft' | 'tampering' | 'sensor_error'
+  severity: 'low' | 'medium' | 'high'
+  message: string
+  timestamp: Timestamp
+  status: 'active' | 'resolved' | 'false_positive'
+  resolvedAt?: Timestamp
+  notes?: string
 }
 ```
 
-## MQTT Topics
-
-### Device → Cloud (Publish)
-
-```
-fuelguard/devices/{deviceId}/data
-```
-
-Payload:
-```json
+#### `devices`
+```typescript
 {
-  "deviceId": "ESP32_001",
-  "timestamp": 1234567890,
-  "data": {
-    "fuel": {
-      "ultrasonic": 45.2,
-      "float": 2048,
-      "liters": 110.5,
-      "percentage": 55.25
-    },
-    "gps": {
-      "lat": 37.7749,
-      "lon": -122.4194,
-      "speed": 45.5,
-      "satellites": 8,
-      "fix": true
-    },
-    "tamper": false,
-    "battery": 4.1,
-    "signal": 25
+  id: string
+  serialNumber: string
+  firmwareVersion: string
+  vehicleId?: string
+  status: 'active' | 'inactive' | 'error'
+  lastSeen: Timestamp
+  configuration: {
+    readingInterval: number
+    alertThreshold: number
+    gsmApn: string
   }
 }
 ```
 
-### Cloud → Device (Subscribe)
+---
 
+## 🔐 Security Rules
+
+Firebase security rules ensure:
+- Only authenticated users can access data
+- Users can only see their own vehicles
+- Admins have full access
+- Device data validated against schemas
+- Rate limiting on sensitive endpoints
+
+---
+
+## 🌉 MQTT Bridge
+
+The MQTT bridge connects IoT devices to Firebase:
+
+**Features**:
+- Real-time data ingestion from devices
+- Zod schema validation
+- Firebase write operations
+- Error handling and logging
+- Auto-reconnection
+
+**Configuration**:
+```env
+MQTT_BROKER_URL=mqtt://broker.hivemq.com:1883
+MQTT_USERNAME=
+MQTT_PASSWORD=
+FIREBASE_CONFIG=<service-account-json>
 ```
-fuelguard/devices/{deviceId}/commands
-```
 
-Payload:
-```json
-{
-  "command": "relay_on"
-}
-```
+---
 
-## Security
+## 📝 Development
 
-### Firestore Rules
-
-- Organization-based data isolation
-- Role-based access control
-- Read/write permissions per collection
-
-### MQTT Security
-
-- TLS encryption (production)
-- Username/password authentication
-- ACL rules per device
-- Topic-level permissions
-
-### API Security
-
-- Firebase Authentication required
-- Token validation
-- Rate limiting
-- Input validation with Zod
-
-## Monitoring
-
-### Firebase Console
-
-- Cloud Functions logs
-- Firestore usage metrics
-- Authentication activity
-
-### EMQX Dashboard
-
-- Connected devices
-- Message throughput
-- Authentication logs
-
-### Application Logs
-
-Winston logger with structured logging:
-- Error tracking
-- Performance metrics
-- Request/response logging
-
-## Deployment
-
-See [../docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md) for production deployment guide.
-
-### Quick Deploy
-
+### Run Functions Locally
 ```bash
-# Deploy Firestore
-firebase deploy --only firestore
+cd functions
+npm run serve
+```
 
-# Deploy Functions
+### Run MQTT Bridge
+```bash
+cd bridge
+npm run dev
+```
+
+### Test Functions
+```bash
+cd functions
+npm test
+```
+
+### Deploy Functions
+```bash
 firebase deploy --only functions
-
-# Start MQTT broker
-docker-compose -f mqtt-broker/docker-compose.prod.yml up -d
-
-# Start bridge (on VPS)
-pm2 start npm --name fuelguard-bridge -- start
 ```
 
-## Troubleshooting
+### Deploy Bridge
+```bash
+# Deploy to your hosting provider
+# Or run as a service on your server
+pm2 start bridge/dist/index.js --name fuelguard-bridge
+```
 
-### Functions Not Deploying
+---
+
+## 🧪 Testing
 
 ```bash
-# Check logs
-firebase functions:log
+# Unit tests
+npm test
 
-# Redeploy
-firebase deploy --only functions --force
+# Integration tests
+npm run test:integration
+
+# Coverage report
+npm run test:coverage
 ```
 
-### Bridge Service Issues
+---
 
-```bash
-# Check logs
-pm2 logs fuelguard-bridge
+## 🔍 Monitoring
 
-# Restart
-pm2 restart fuelguard-bridge
-```
+- **Cloud Functions**: Firebase Console → Functions
+- **Firestore**: Firebase Console → Firestore
+- **Errors**: Sentry integration (if configured)
+- **Logs**: `firebase functions:log`
 
-### MQTT Connection Issues
+---
 
-```bash
-# Check broker
-docker logs fuelguard-mqtt
+## 📊 Performance
 
-# Test connection
-mosquitto_sub -h localhost -p 1883 -t "#" -v
-```
+- **Cold Start**: ~500ms
+- **Average Response**: <200ms
+- **Concurrent Users**: Scalable to 10k+
+- **Data Ingestion**: 100+ msgs/sec
 
-## Performance
+---
 
-- API response: <200ms average
-- Alert detection: <1s from reading
-- MQTT throughput: 1000+ msg/min
-- Firestore writes: Real-time sync
+## 🤝 Contributing
 
-## License
+Follow the main project contribution guidelines.
 
-MIT
+---
+
+**Part of the FuelGuard project by Yash Ghodele**

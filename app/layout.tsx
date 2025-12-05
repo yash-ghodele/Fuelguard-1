@@ -3,25 +3,69 @@ import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { Analytics } from '@vercel/analytics/react'
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FuelGuard - Vehicle Monitoring Dashboard",
-  description: "IoT vehicle monitoring dashboard for real-time fuel tracking",
-
+  metadataBase: new URL('https://fuelguard.netlify.app'), // Update with your Netlify URL
+  title: {
+    default: "FuelGuard - Vehicle Monitoring Dashboard",
+    template: "%s | FuelGuard"
+  },
+  description: "Real-time IoT-based vehicle tracking and fuel monitoring system. Monitor fuel levels, track vehicles, and prevent theft with advanced IoT sensors.",
+  keywords: ["vehicle tracking", "fuel monitoring", "IoT", "fleet management", "GPS tracking", "fuel theft prevention"],
+  authors: [{ name: "Yash Ghodele", url: "https://yash-ghodele.netlify.app" }],
+  creator: "Yash Ghodele",
+  publisher: "FuelGuard",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://fuelguard.netlify.app',
+    title: 'FuelGuard - Vehicle Monitoring Dashboard',
+    description: 'Real-time IoT-based vehicle tracking and fuel monitoring system',
+    siteName: 'FuelGuard',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FuelGuard - Vehicle Monitoring Dashboard',
+    description: 'Real-time IoT-based vehicle tracking and fuel monitoring system',
+    creator: '@yashghodele',
+  },
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icon-192.png',
+  },
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
           {children}
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
